@@ -3,7 +3,6 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="manifest" href="manifest.webmanifest">
   <title>Factura Local (Offline)</title>
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -23,16 +22,16 @@
       </div>
       <div class="row">
         <label>Dirección</label>
-        <textarea id="bizAddr" rows="2" placeholder="PO Box 35000 PMB 20041 Canovanas, PR 00729"></textarea>
+        <textarea id="bizAddr" rows="2" placeholder="Urb. Levitown 2106 Paseo Alfa, Toa Baja, PR 00949"></textarea>
       </div>
       <div class="row two">
         <div>
           <label>Teléfono</label>
-          <input id="bizPhone" placeholder="(787) 564-2666" />
+          <input id="bizPhone" placeholder="(787) 000-0000" />
         </div>
         <div>
           <label>Email</label>
-          <input id="bizEmail" placeholder="whatihaveonlinestore@gmail.com" />
+          <input id="bizEmail" placeholder="tuemail@correo.com" />
         </div>
       </div>
 
@@ -49,6 +48,12 @@
         <label>Teléfono (opcional)</label>
         <input id="custPhone" placeholder="(000) 000-0000" />
       </div>
+
+      <div class="actions">
+        <button id="copyPirateBtn" type="button">Copiar dirección (Pirate Ship)</button>
+        <button id="openPirateBtn" type="button" class="ghost">Abrir Pirate Ship</button>
+      </div>
+      <p class="muted small">En Pirate Ship: Create Label → Paste Address.</p>
     </section>
 
     <section class="card">
@@ -61,11 +66,12 @@
         <div>
           <label>Fecha</label>
           <input id="invDate" type="date" />
-          <div class="row">
-  <label>Tracking # (opcional)</label>
-  <input id="trackingNo" placeholder="Ej: 9400..." />
-          </div>
         </div>
+      </div>
+
+      <div class="row">
+        <label>Tracking # (opcional)</label>
+        <input id="trackingNo" placeholder="Ej: 9400..." />
       </div>
 
       <h2>Artículos</h2>
