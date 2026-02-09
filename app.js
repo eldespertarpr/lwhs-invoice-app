@@ -266,5 +266,10 @@ function init() {
   addRow("Artículo 1", 1, 0);
   addRow("Artículo 2", 1, 0);
 }
-
+$("copyTrackingBtn").addEventListener("click", async () => {
+  const t = $("trackingNo").value.trim();
+  if (!t) return alert("No hay tracking para copiar.");
+  await copyToClipboard(t);
+  alert("Tracking copiado ✅");
+});
 init();
