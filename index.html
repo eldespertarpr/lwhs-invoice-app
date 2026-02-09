@@ -1,1 +1,122 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Factura Local (Offline)</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="top">
+    <h1>Factura Local</h1>
+    <p class="muted">Todo se queda en tu dispositivo. Sin servidor.</p>
+  </header>
 
+  <main class="grid">
+    <section class="card">
+      <h2>Tu negocio</h2>
+      <div class="row">
+        <label>Nombre</label>
+        <input id="bizName" placeholder="Look What I Have Store" />
+      </div>
+      <div class="row">
+        <label>Dirección</label>
+        <textarea id="bizAddr" rows="2" placeholder="Urb. Levitown 2106 Paseo Alfa, Toa Baja, PR 00949"></textarea>
+      </div>
+      <div class="row two">
+        <div>
+          <label>Teléfono</label>
+          <input id="bizPhone" placeholder="(787) 000-0000" />
+        </div>
+        <div>
+          <label>Email</label>
+          <input id="bizEmail" placeholder="tuemail@correo.com" />
+        </div>
+      </div>
+
+      <h2>Cliente</h2>
+      <div class="row">
+        <label>Nombre</label>
+        <input id="custName" placeholder="Nombre del cliente" />
+      </div>
+      <div class="row">
+        <label>Dirección</label>
+        <textarea id="custAddr" rows="2" placeholder="Dirección del cliente"></textarea>
+      </div>
+      <div class="row">
+        <label>Teléfono (opcional)</label>
+        <input id="custPhone" placeholder="(000) 000-0000" />
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Factura</h2>
+      <div class="row two">
+        <div>
+          <label>Número</label>
+          <input id="invNumber" />
+        </div>
+        <div>
+          <label>Fecha</label>
+          <input id="invDate" type="date" />
+        </div>
+      </div>
+
+      <h2>Artículos</h2>
+      <div class="tableWrap">
+        <table id="itemsTable">
+          <thead>
+            <tr>
+              <th>Descripción</th>
+              <th class="num">Cant.</th>
+              <th class="num">Precio</th>
+              <th class="num">Total</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="itemsBody"></tbody>
+        </table>
+      </div>
+      <div class="actions">
+        <button id="addItemBtn" type="button">+ Añadir línea</button>
+      </div>
+
+      <h2>Totales</h2>
+      <div class="row two">
+        <div>
+          <label>IVU % (opcional)</label>
+          <input id="taxRate" type="number" step="0.01" placeholder="0" />
+        </div>
+        <div>
+          <label>Envío (opcional)</label>
+          <input id="shipping" type="number" step="0.01" placeholder="0" />
+        </div>
+      </div>
+
+      <div class="totals">
+        <div><span>Subtotal</span><strong id="subTotal">$0.00</strong></div>
+        <div><span>IVU</span><strong id="taxTotal">$0.00</strong></div>
+        <div><span>Envío</span><strong id="shipTotal">$0.00</strong></div>
+        <div class="grand"><span>Total</span><strong id="grandTotal">$0.00</strong></div>
+      </div>
+
+      <h2>Pago</h2>
+      <div class="row">
+        <label>Instrucciones (se imprimen en la factura)</label>
+        <textarea id="payNotes" rows="3" placeholder="ATH Móvil: @TuHandle | PayPal: tuemail@... | Tarjeta: (link o instrucciones)"></textarea>
+      </div>
+
+      <div class="actions">
+        <button id="previewBtn" type="button" class="primary">Vista / Imprimir PDF</button>
+        <button id="clearBtn" type="button" class="ghost">Limpiar</button>
+      </div>
+
+      <p class="muted small">
+        Tip: en Android/Chrome: <b>Compartir / Imprimir</b> → <b>Guardar como PDF</b>.
+      </p>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
