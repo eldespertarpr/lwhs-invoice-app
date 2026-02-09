@@ -1,1 +1,9 @@
-
+{
+  "name": "Factura Local",
+  "short_name": "Factura",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff"
+}
