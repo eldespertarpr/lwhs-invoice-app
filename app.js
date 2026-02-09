@@ -9,10 +9,10 @@ function makeDefaultInvoiceNumber() {
   const y = d.getFullYear();
   const m = pad2(d.getMonth() + 1);
   const day = pad2(d.getDate());
-  const key = `invCounter-${y}${m}${day}`;
-  const next = (parseInt(localStorage.getItem(key) || "0", 10) + 1);
-  localStorage.setItem(key, String(next));
-  return `${y}${m}${day}-${String(next).padStart(3, "0")}`;
+  const hh = pad2(d.getHours());
+  const mm = pad2(d.getMinutes());
+  const ss = pad2(d.getSeconds());
+  return `${y}${m}${day}-${hh}${mm}${ss}`; // ejemplo: 20260209-172845
 }
 
 function addRow(desc = "", qty = 1, price = 0) {
