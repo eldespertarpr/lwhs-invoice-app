@@ -1,10 +1,15 @@
 const $ = (id) => document.getElementById(id);
-
 const fmt = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
 
 function pad2(n){ return String(n).padStart(2, "0"); }
+function escapeHtml(s){
+  return String(s ?? "").replace(/[&<>"']/g, (c) => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[c]));
+}
 
 function makeDefaultInvoiceNumber() {
+  // Compatible con uso local (file://) sin depender de localStorage.
   const d = new Date();
   const y = d.getFullYear();
   const m = pad2(d.getMonth() + 1);
@@ -12,7 +17,7 @@ function makeDefaultInvoiceNumber() {
   const hh = pad2(d.getHours());
   const mm = pad2(d.getMinutes());
   const ss = pad2(d.getSeconds());
-  return `${y}${m}${day}-${hh}${mm}${ss}`; // ejemplo: 20260209-172845
+  return `${y}${m}${day}-${hh}${mm}${ss}`;
 }
 
 function addRow(desc = "", qty = 1, price = 0) {
@@ -30,12 +35,6 @@ function addRow(desc = "", qty = 1, price = 0) {
   tr.querySelector(".del").addEventListener("click", () => { tr.remove(); recalc(); });
 
   recalc();
-}
-
-function escapeHtml(s){
-  return String(s).replace(/[&<>"']/g, (c) => ({
-    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-  }[c]));
 }
 
 function getItems() {
@@ -64,38 +63,6 @@ function recalc() {
   $("grandTotal").textContent = fmt.format(grand);
 }
 
-function init() {
-  // defaults
-  const today = new Date();
-  $("invDate").value = `${today.getFullYear()}-${pad2(today.getMonth()+1)}-${pad2(today.getDate())}`;
-  $("invNumber").value = makeDefaultInvoiceNumber();
-
-  $("addItemBtn").addEventListener("click", () => addRow());
-  $("taxRate").addEventListener("input", recalc);
-  $("shipping").addEventListener("input", recalc);
-
-  $("previewBtn").addEventListener("click", openPrintView);
-  $("clearBtn").addEventListener("click", () => location.reload());
-
-  // start with 2 lines
-  addRow("Artículo 1", 1, 0);
-  addRow("Artículo 2", 1, 0);
-}
-
-function openPrintView() {
-  const data = collectData();
-  const html = buildInvoiceHtml(data);
-
-  const w = window.open("", "_blank");
-  w.document.open();
-  w.document.write(html);
-  w.document.close();
-
-  // Auto-open print dialog (user can save as PDF)
-  w.focus();
-  w.print();
-}
-
 function collectData() {
   const items = getItems();
   const subtotal = items.reduce((a, x) => a + x.total, 0);
@@ -119,6 +86,7 @@ function collectData() {
     inv: {
       number: $("invNumber").value.trim(),
       date: $("invDate").value,
+      tracking: $("trackingNo").value.trim(), // <-- TRACKING
     },
     items,
     totals: { subtotal, taxRate, tax, shipping, grand },
@@ -165,7 +133,11 @@ function buildInvoiceHtml(d) {
   <div class="top">
     <div>
       <h1>FACTURA</h1>
-      <div class="muted">Núm: <b>${safe(d.inv.number)}</b><br>Fecha: <b>${safe(d.inv.date)}</b></div>
+      <div class="muted">
+        Núm: <b>${safe(d.inv.number)}</b><br>
+        Fecha: <b>${safe(d.inv.date)}</b>
+        ${d.inv.tracking ? `<br>Tracking: <b>${safe(d.inv.tracking)}</b>` : ""}
+      </div>
     </div>
     <div class="box" style="min-width:280px">
       <b>${safe(d.biz.name)}</b><br>
@@ -205,6 +177,94 @@ function buildInvoiceHtml(d) {
   </p>
 </body>
 </html>`;
+}
+
+function openPrintView() {
+  const data = collectData();
+  const html = buildInvoiceHtml(data);
+
+  const w = window.open("", "_blank");
+  if (!w) {
+    alert("Tu navegador bloqueó la ventana de impresión. Intenta de nuevo y acepta los permisos, o usa otro navegador.");
+    return;
+  }
+  w.document.open();
+  w.document.write(html);
+  w.document.close();
+  w.focus();
+  w.print();
+}
+
+async function copyToClipboard(text) {
+  // Intenta Clipboard API
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch (_) {}
+
+  // Fallback: textarea + execCommand
+  try {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.top = "-1000px";
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    const ok = document.execCommand("copy");
+    document.body.removeChild(ta);
+    if (ok) return true;
+  } catch (_) {}
+
+  // Último recurso: prompt para copiar manual
+  window.prompt("Copia y pega esto en Pirate Ship:", text);
+  return false;
+}
+
+function buildPirateAddressBlock() {
+  const name = $("custName").value.trim();
+  const addr = $("custAddr").value.trim();
+  const phone = $("custPhone").value.trim();
+
+  // Bloque simple para "Paste Address" en Pirate Ship
+  const lines = [];
+  if (name) lines.push(name);
+  if (addr) lines.push(addr);
+  if (phone) lines.push(phone);
+  return lines.join("\n");
+}
+
+function init() {
+  const today = new Date();
+  $("invDate").value = `${today.getFullYear()}-${pad2(today.getMonth()+1)}-${pad2(today.getDate())}`;
+  $("invNumber").value = makeDefaultInvoiceNumber();
+
+  $("addItemBtn").addEventListener("click", () => addRow());
+  $("taxRate").addEventListener("input", recalc);
+  $("shipping").addEventListener("input", recalc);
+
+  $("previewBtn").addEventListener("click", openPrintView);
+  $("clearBtn").addEventListener("click", () => location.reload());
+
+  $("copyPirateBtn").addEventListener("click", async () => {
+    const block = buildPirateAddressBlock();
+    if (!block) {
+      alert("Primero llena al menos el nombre y la dirección del cliente.");
+      return;
+    }
+    await copyToClipboard(block);
+    alert("Dirección copiada. Ve a Pirate Ship y pega en 'Paste Address'.");
+  });
+
+  $("openPirateBtn").addEventListener("click", () => {
+    window.open("https://pirateship.com", "_blank");
+  });
+
+  // start with 2 lines
+  addRow("Artículo 1", 1, 0);
+  addRow("Artículo 2", 1, 0);
 }
 
 init();
