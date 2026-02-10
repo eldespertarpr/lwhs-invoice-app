@@ -14,8 +14,17 @@ h2 { margin: 12px 0 8px; font-size: 16px; }
 .row { display: grid; gap: 6px; margin-bottom: 10px; }
 .row.two { grid-template-columns: 1fr 1fr; gap: 10px; }
 label { font-size: 13px; color: #333; }
-input, textarea { width: 100%; box-sizing: border-box; padding: 10px; border-radius: 10px; border: 1px solid #ddd; outline: none; }
+
+input, textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  outline: none;
+}
 input:focus, textarea:focus { border-color: #999; }
+input[readonly] { background: #fafafa; }
 
 .tableWrap { overflow: auto; border: 1px solid #eee; border-radius: 12px; }
 table { width: 100%; border-collapse: collapse; min-width: 640px; }
