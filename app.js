@@ -131,6 +131,8 @@ function buildInvoiceHtml(d) {
 </head>
 <body>
   <div class="top">
+  <img src="logo.png" alt="Logo" style="height:48px; object-fit:contain"
+     onerror="this.style.display='none'">
     <div>
       <h1>FACTURA</h1>
       <div class="muted">
