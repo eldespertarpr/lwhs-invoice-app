@@ -61,6 +61,10 @@ function recalc() {
   $("taxTotal").textContent = fmt.format(tax);
   $("shipTotal").textContent = fmt.format(shipping);
   $("grandTotal").textContent = fmt.format(grand);
+  const real = parseFloat($("realShipCost").value || "0");
+const charged = parseFloat($("shipping").value || "0");
+const diff = charged - real;
+$("shipDiff").value = fmt.format(diff);
 }
 
 function collectData() {
