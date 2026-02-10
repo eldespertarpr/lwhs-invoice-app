@@ -9,7 +9,6 @@ function escapeHtml(s){
 }
 
 function makeDefaultInvoiceNumber() {
-  // Compatible con uso local (file://) sin depender de localStorage.
   const d = new Date();
   const y = d.getFullYear();
   const m = pad2(d.getMonth() + 1);
@@ -61,10 +60,11 @@ function recalc() {
   $("taxTotal").textContent = fmt.format(tax);
   $("shipTotal").textContent = fmt.format(shipping);
   $("grandTotal").textContent = fmt.format(grand);
+
+  // Privado: costo real y diferencia
   const real = parseFloat($("realShipCost").value || "0");
-const charged = parseFloat($("shipping").value || "0");
-const diff = charged - real;
-$("shipDiff").value = fmt.format(diff);
+  const diff = shipping - real;
+  $("shipDiff").value = fmt.format(diff);
 }
 
 function collectData() {
@@ -90,7 +90,7 @@ function collectData() {
     inv: {
       number: $("invNumber").value.trim(),
       date: $("invDate").value,
-      tracking: $("trackingNo").value.trim(), // <-- TRACKING
+      tracking: $("trackingNo").value.trim(),
     },
     items,
     totals: { subtotal, taxRate, tax, shipping, grand },
@@ -99,27 +99,31 @@ function collectData() {
 }
 
 function buildInvoiceHtml(d) {
+  const baseHref = new URL(".", location.href).href; // para que cargue logo.png aunque el print sea about:blank
+  const safe = (v) => escapeHtml(v || "");
+  const br = (v) => safe(v).replace(/\n/g, "<br>");
+
   const rows = d.items.map(it => `
     <tr>
-      <td>${escapeHtml(it.desc)}</td>
+      <td>${safe(it.desc)}</td>
       <td class="num">${it.qty}</td>
       <td class="num">${fmt.format(it.price)}</td>
       <td class="num">${fmt.format(it.total)}</td>
     </tr>
   `).join("");
 
-  const safe = (v) => escapeHtml(v || "");
-  const br = (v) => safe(v).replace(/\n/g, "<br>");
-
   return `<!doctype html>
 <html lang="es">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<base href="${safe(baseHref)}">
 <title>Factura ${safe(d.inv.number)}</title>
 <style>
   body{ font-family: Arial, sans-serif; color:#111; margin:24px; }
-  .top{ display:flex; justify-content:space-between; gap:16px; }
+  .top{ display:flex; justify-content:space-between; gap:16px; align-items:flex-start; }
+  .leftTop{ display:flex; gap:12px; align-items:flex-start; }
+  .logo{ height:48px; object-fit:contain; }
   h1{ margin:0; font-size:22px; }
   .box{ border:1px solid #ddd; border-radius:10px; padding:12px; }
   .muted{ color:#666; font-size:12px; }
@@ -135,16 +139,18 @@ function buildInvoiceHtml(d) {
 </head>
 <body>
   <div class="top">
-  <img src="logo.png" alt="Logo" style="height:48px; object-fit:contain"
-     onerror="this.style.display='none'">
-    <div>
-      <h1>FACTURA</h1>
-      <div class="muted">
-        Núm: <b>${safe(d.inv.number)}</b><br>
-        Fecha: <b>${safe(d.inv.date)}</b>
-        ${d.inv.tracking ? `<br>Tracking: <b>${safe(d.inv.tracking)}</b>` : ""}
+    <div class="leftTop">
+      <img src="logo.png" class="logo" alt="Logo" onerror="this.style.display='none'">
+      <div>
+        <h1>FACTURA</h1>
+        <div class="muted">
+          Núm: <b>${safe(d.inv.number)}</b><br>
+          Fecha: <b>${safe(d.inv.date)}</b>
+          ${d.inv.tracking ? `<br>Tracking: <b>${safe(d.inv.tracking)}</b>` : ""}
+        </div>
       </div>
     </div>
+
     <div class="box" style="min-width:280px">
       <b>${safe(d.biz.name)}</b><br>
       ${br(d.biz.addr)}<br>
@@ -178,9 +184,7 @@ function buildInvoiceHtml(d) {
     <b>Pago</b><br>${br(d.payNotes)}
   </div>` : ""}
 
-  <p class="muted noPrint" style="margin-top:14px">
-    Puedes cerrar esta pestaña cuando guardes el PDF.
-  </p>
+  <p class="muted noPrint" style="margin-top:14px">Puedes cerrar esta pestaña cuando guardes el PDF.</p>
 </body>
 </html>`;
 }
@@ -191,7 +195,7 @@ function openPrintView() {
 
   const w = window.open("", "_blank");
   if (!w) {
-    alert("Tu navegador bloqueó la ventana de impresión. Intenta de nuevo y acepta los permisos, o usa otro navegador.");
+    alert("El navegador bloqueó la ventana de impresión. Intenta de nuevo o usa otro navegador.");
     return;
   }
   w.document.open();
@@ -202,7 +206,6 @@ function openPrintView() {
 }
 
 async function copyToClipboard(text) {
-  // Intenta Clipboard API
   try {
     if (navigator.clipboard && window.isSecureContext) {
       await navigator.clipboard.writeText(text);
@@ -210,7 +213,6 @@ async function copyToClipboard(text) {
     }
   } catch (_) {}
 
-  // Fallback: textarea + execCommand
   try {
     const ta = document.createElement("textarea");
     ta.value = text;
@@ -224,8 +226,7 @@ async function copyToClipboard(text) {
     if (ok) return true;
   } catch (_) {}
 
-  // Último recurso: prompt para copiar manual
-  window.prompt("Copia y pega esto en Pirate Ship:", text);
+  window.prompt("Copia esto:", text);
   return false;
 }
 
@@ -234,7 +235,6 @@ function buildPirateAddressBlock() {
   const addr = $("custAddr").value.trim();
   const phone = $("custPhone").value.trim();
 
-  // Bloque simple para "Paste Address" en Pirate Ship
   const lines = [];
   if (name) lines.push(name);
   if (addr) lines.push(addr);
@@ -250,32 +250,32 @@ function init() {
   $("addItemBtn").addEventListener("click", () => addRow());
   $("taxRate").addEventListener("input", recalc);
   $("shipping").addEventListener("input", recalc);
+  $("realShipCost").addEventListener("input", recalc);
 
   $("previewBtn").addEventListener("click", openPrintView);
   $("clearBtn").addEventListener("click", () => location.reload());
 
   $("copyPirateBtn").addEventListener("click", async () => {
     const block = buildPirateAddressBlock();
-    if (!block) {
-      alert("Primero llena al menos el nombre y la dirección del cliente.");
-      return;
-    }
+    if (!block) return alert("Llena al menos nombre y dirección del cliente.");
     await copyToClipboard(block);
-    alert("Dirección copiada. Ve a Pirate Ship y pega en 'Paste Address'.");
+    alert("Dirección copiada ✅ Pega en Pirate Ship → Paste Address.");
   });
 
   $("openPirateBtn").addEventListener("click", () => {
     window.open("https://pirateship.com", "_blank");
   });
 
-  // start with 2 lines
+  $("copyTrackingBtn").addEventListener("click", async () => {
+    const t = $("trackingNo").value.trim();
+    if (!t) return alert("No hay tracking para copiar.");
+    await copyToClipboard(t);
+    alert("Tracking copiado ✅");
+  });
+
   addRow("Artículo 1", 1, 0);
   addRow("Artículo 2", 1, 0);
+  recalc();
 }
-$("copyTrackingBtn").addEventListener("click", async () => {
-  const t = $("trackingNo").value.trim();
-  if (!t) return alert("No hay tracking para copiar.");
-  await copyToClipboard(t);
-  alert("Tracking copiado ✅");
-});
+
 init();
